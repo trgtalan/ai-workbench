@@ -52,14 +52,19 @@ Kapsamı ve kapsam dışı bıraktıkları `checks/refs.py` başlığında yazı
 
 ## Ölçüm
 
-`benchmarks/refs/kume-v2` — 6 bulunması gereken, 4 bulunmaması gereken, 10 kasten
+`benchmarks/refs/kume-v3` — 6 bulunması gereken, 4 bulunmaması gereken, 12 kasten
 kapsam dışı vaka. Eşik ölçüm kümesinin `beklenen` dosyasında: YP≤0, YN≤0. Şu an geçiyor.
 
-v1 → v2 nedeni ölçülmüş: kontrol ilk gerçek koşusunda 3 yanlış pozitif verdi — düz
+v1 → v3 nedeni ölçülmüş: kontrol ilk gerçek koşusunda 3 yanlış pozitif verdi — düz
 yazıda anılan dosya adları, örnek kümenin kendisi, ve taşınmış bir dosyanın geçmişe
 dönük anılması. Kapsam daraltıldı, daraltmanın kendisi kümeye vaka olarak yazıldı.
 Ayrıca ölçüm, daraltma sırasında kontrole giren gerçek bir hatayı (küme klasörünün
 kendi taramasından elenmesi) yakaladı — doğrulayıcının işini yaptığı yer burası.
+
+v3'te sınır tek kurala oturdu: **ters tırnak içinde iç ayırıcı yoksa o bir addır, yol
+değil.** `BASLA.md` ve `core/` anmadır; `checks/refs.py` ve `benchmarks/refs/` yoldur. Uzantısız
+ve `/` ile bitmeyen (`next/image`) modül belirtecidir. Bu üç daraltmanın üçü de gerçek
+kullanımda yanlış pozitif verdikten sonra yazıldı, tahminle değil.
 
 Bilinen zayıflık: kümeyi ve kontrolü aynı kişi yazdı, küme küçük. Sayı, kontrolün
 mutlak doğruluğunu değil, kural ile niyetin örtüştüğünü gösterir. Gerçek kullanımda

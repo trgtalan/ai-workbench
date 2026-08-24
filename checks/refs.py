@@ -5,7 +5,8 @@ NE ARAR
   olmadigi. Iki bicim taranir:
     - markdown link hedefi:  [ad](yol/dosya.md)
     - ters tirnak icindeki YOL:  `site/proje-envanteri.md`, `checks/`
-      (ters tirnak icinde ayirici '/' YOKSA yol degil, dosya ADIdir -> kapsam disi)
+      (ters tirnak icinde IC ayirici yoksa yol degil, ADdir -> kapsam disi.
+       `BASLA.md` ve `core/` ad anmasidir; `checks/refs.py` ve `var/alt/` yoldur.)
 
 NE ARAMAZ (kasten kapsam disi)
   - http/https/mailto adresleri            -> agdan dogrulama bu kontrolun isi degil
@@ -14,8 +15,9 @@ NE ARAMAZ (kasten kapsam disi)
   - semasiz alan adlari (wa.me/..., x.com/..) -> adres, dosya degil
   - `#bolum` sayfa ici cengelleri          -> baslik esleme ayri bir kontroldur
   - yolun icerigi                          -> yalnizca varlik denetlenir
-  - ters tirnakta ayiricisiz ad (`BASLA.md`) -> duz yazida anma, referans degil
+  - ters tirnakta ic ayiricisiz ad (`BASLA.md`, `core/`) -> anma, referans degil
   - benchmarks/ altindaki ornek kume        -> kasten kirik, olcum verisi
+  - uzantisiz modul adlari (`next/image`)   -> paket belirteci, dosya degil
 
 Cikis: bulgu varsa 1, yoksa 0.
 """
@@ -25,8 +27,9 @@ from pathlib import Path
 
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 TIRNAK = re.compile(r"`([^`\n]+)`")
-# yol gibi gorunen: en az bir / icerir ya da bilinen bir uzantiyla biter
-YOL_GIBI = re.compile(r"(^|.*/)[^/\s]+\.(md|py|json|txt|toml|ya?ml|html|css|js|ts|tsx)$|/$|.+/.+")
+# yol gibi gorunen: bilinen bir uzantiyla biter YA DA / ile biter (klasor).
+# Uzantisiz ve / ile bitmeyen (next/image, lucide-react) modul belirtecidir, yol degil.
+YOL_GIBI = re.compile(r".+\.(md|py|json|txt|toml|ya?ml|html|css|js|ts|tsx|svg|png|jpg|webp)$|.+/$")
 
 
 def _kod_bloklari_disi(metin):
@@ -64,7 +67,7 @@ def dosyayi_tara(dosya: Path, kok: Path):
             if not _aday_mi(ham):
                 continue
             # ters tirnakta ayirici yoksa dosya adi anilmis demektir, referans degil
-            if not link_mi and "/" not in ham:
+            if not link_mi and "/" not in ham.strip().rstrip("/"):
                 continue
             y = ham.split("#", 1)[0].rstrip("/")
             if not y:

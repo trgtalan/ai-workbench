@@ -17,3 +17,5 @@ Duz kod parcasi: `git init` ve `aiw check`
 
 Ayiricisiz ad — duz yazida anma, referans degil: `BASLA.md` ve `README.md`
 Silinmis dosyanin anilmasi: `eski-tasarim.md` tasindi, artik yok.
+Modul belirteci — paket adi, dosya degil: `next/image` ve `lucide-react/icons`
+Ic ayiricisiz klasor adi — kasten var olmayanin anilmasi: `core/` ve `adapters/`

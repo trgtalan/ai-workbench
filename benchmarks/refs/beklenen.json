@@ -1,5 +1,5 @@
 {
-  "kume": "kume-v2",
+  "kume": "kume-v3",
   "esik": {
     "yanlis_pozitif": 0,
     "yanlis_negatif": 0
@@ -12,5 +12,5 @@
     "olumlu.md:7",
     "olumlu.md:8"
   ],
-  "not": "v2: ayiricisiz ters tirnak adlar kapsam disi (duz yazi anmasi); markdown link hedefi ayiricisiz olsa da kapsam ici; benchmarks/ agac taramasinda haric, dogrudan hedef gosterildiginde taranir."
+  "not": "v2: ayiricisiz ters tirnak adlar kapsam disi (duz yazi anmasi); markdown link hedefi ayiricisiz olsa da kapsam ici; benchmarks/ agac taramasinda haric, dogrudan hedef gosterildiginde taranir. v3: uzantisi olmayan ve '/' ile bitmeyen referanslar modul belirteci sayilir, kapsam disidir."
 }

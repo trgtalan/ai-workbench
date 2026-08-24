@@ -1,0 +1,16 @@
+{
+  "kume": "kume-v2",
+  "esik": {
+    "yanlis_pozitif": 0,
+    "yanlis_negatif": 0
+  },
+  "beklenen_bulgular": [
+    "olumlu.md:3",
+    "olumlu.md:4",
+    "olumlu.md:5",
+    "olumlu.md:6",
+    "olumlu.md:7",
+    "olumlu.md:8"
+  ],
+  "not": "v2: ayiricisiz ters tirnak adlar kapsam disi (duz yazi anmasi); markdown link hedefi ayiricisiz olsa da kapsam ici; benchmarks/ agac taramasinda haric, dogrudan hedef gosterildiginde taranir."
+}

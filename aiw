@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""aiw — kisiye ait AI calisma altyapisi. Yalnizca stdlib.
+
+Komutlar icin: aiw yardim
+"""
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+KOK = Path(__file__).resolve().parent
+sys.path.insert(0, str(KOK))
+
+ISARET_BAS = "<!-- aiw:bas -->"
+ISARET_SON = "<!-- aiw:son -->"
+HEDEF_KURAL = Path.home() / ".claude" / "CLAUDE.md"
+KAYNAK_KURAL = KOK / "CLAUDE.md"
+
+
+def surum():
+    try:
+        c = subprocess.run(["git", "-C", str(KOK), "rev-parse", "--short", "HEAD"],
+                           capture_output=True, text=True, timeout=5)
+        return c.stdout.strip() or "commit-yok"
+    except Exception:
+        return "git-yok"
+
+
+def damga():
+    return f"[ai-workbench {surum()}]"
+
+
+# --- komutlar ---------------------------------------------------------------
+
+def k_models(argv):
+    from aiw_lib import gateway
+    filtre = argv[0] if argv else ""
+    m = [x for x in gateway.modeller() if filtre in x]
+    for x in m:
+        print(x)
+    print(f"\n{len(m)} model {damga()}")
+
+
+def k_ask(argv):
+    """aiw ask <model> <istem> [--dosya YOL]"""
+    from aiw_lib import gateway
+    if len(argv) < 2:
+        print("kullanim: aiw ask <model> <istem> [--dosya YOL]"); return 2
+    model, istem = argv[0], argv[1]
+    if "--dosya" in argv:
+        y = Path(argv[argv.index("--dosya") + 1])
+        istem += "\n\n---\n" + y.read_text(encoding="utf-8")
+    metin, kayit = gateway.sor(model, istem)
+    print(metin)
+    print(f"\n--- {damga()} {model} | token {kayit['token_giris']}/{kayit['token_cikis']} | {kayit['saniye']}sn")
+
+
+def k_check(argv):
+    from checks import refs
+    hedef = Path(argv[0] if argv else ".")
+    b = refs.kos(hedef)
+    for d, n, ref in b:
+        print(f"{d}:{n}: kirik referans -> {ref}")
+    print(f"\n{len(b)} bulgu {damga()}")
+    return 1 if b else 0
+
+
+def k_bench(argv):
+    return subprocess.call([sys.executable, str(KOK / "benchmarks/refs/olc.py")])
+
+
+def k_maliyet(argv):
+    """runs/ altindaki cagrilarin token toplami — kanit olmadan tasarruf iddia edilmez."""
+    toplam = {}
+    for p in (KOK / "runs").rglob("*.json"):
+        k = json.loads(p.read_text())
+        t = toplam.setdefault(k["model"], {"cagri": 0, "giris": 0, "cikis": 0, "hata": 0})
+        t["cagri"] += 1
+        if k.get("sonuc") == "hata":
+            t["hata"] += 1
+        t["giris"] += k.get("token_giris") or 0
+        t["cikis"] += k.get("token_cikis") or 0
+    if not toplam:
+        print("kayit yok."); return 0
+    print(f"{'model':<38} {'cagri':>6} {'giris':>9} {'cikis':>9} {'hata':>5}")
+    for m, t in sorted(toplam.items()):
+        print(f"{m:<38} {t['cagri']:>6} {t['giris']:>9} {t['cikis']:>9} {t['hata']:>5}")
+    print(f"\n{damga()}")
+
+
+def k_install(argv):
+    """Ortak kurali ~/.claude/CLAUDE.md icindeki yonetilen bloga yazar. Idempotent."""
+    if not KAYNAK_KURAL.exists():
+        print(f"kaynak yok: {KAYNAK_KURAL}"); return 1
+    blok = f"{ISARET_BAS}\n<!-- kaynak: {KAYNAK_KURAL} — elle duzenleme, 'aiw install' ile guncelle -->\n{KAYNAK_KURAL.read_text().strip()}\n{ISARET_SON}"
+    HEDEF_KURAL.parent.mkdir(parents=True, exist_ok=True)
+    mevcut = HEDEF_KURAL.read_text() if HEDEF_KURAL.exists() else ""
+    if ISARET_BAS in mevcut and ISARET_SON in mevcut:
+        bas = mevcut.index(ISARET_BAS); son = mevcut.index(ISARET_SON) + len(ISARET_SON)
+        yeni = mevcut[:bas] + blok + mevcut[son:]
+        eylem = "guncellendi"
+    else:
+        yeni = (mevcut.rstrip() + "\n\n" + blok + "\n") if mevcut.strip() else blok + "\n"
+        eylem = "eklendi"
+    HEDEF_KURAL.write_text(yeni)
+    print(f"blok {eylem}: {HEDEF_KURAL} {damga()}")
+
+
+def k_uninstall(argv):
+    if not HEDEF_KURAL.exists():
+        print("hedef yok."); return 0
+    m = HEDEF_KURAL.read_text()
+    if ISARET_BAS not in m:
+        print("yonetilen blok yok, dokunulmadi."); return 0
+    bas = m.index(ISARET_BAS); son = m.index(ISARET_SON) + len(ISARET_SON)
+    HEDEF_KURAL.write_text((m[:bas].rstrip() + "\n" + m[son:].lstrip()).strip() + "\n")
+    print(f"blok kaldirildi: {HEDEF_KURAL}")
+
+
+def k_selftest(argv):
+    import tempfile
+    hata = 0
+    print("1) kontrol olcumu")
+    hata |= k_bench([])
+    print("\n2) install/uninstall idempotentligi (gecici hedefte)")
+    global HEDEF_KURAL
+    gercek = HEDEF_KURAL
+    with tempfile.TemporaryDirectory() as t:
+        HEDEF_KURAL = Path(t) / "CLAUDE.md"
+        HEDEF_KURAL.write_text("# kullanicinin kendi notu\n")
+        k_install([]); k_install([])
+        icerik = HEDEF_KURAL.read_text()
+        if icerik.count(ISARET_BAS) != 1:
+            print("   KALDI: blok cogaldi"); hata |= 1
+        k_uninstall([])
+        if "kullanicinin kendi notu" not in HEDEF_KURAL.read_text():
+            print("   KALDI: kullanici icerigi kayboldu"); hata |= 1
+        if ISARET_BAS in HEDEF_KURAL.read_text():
+            print("   KALDI: blok temiz silinmedi"); hata |= 1
+    HEDEF_KURAL = gercek
+    print("\n3) gecit erisimi")
+    try:
+        from aiw_lib import gateway
+        print(f"   {len(gateway.modeller())} model gorunuyor")
+    except Exception as e:
+        print(f"   UYARI: gecide ulasilamadi ({str(e)[:60]}) — isci katmani devre disi, is Claude'da kalir")
+    print(f"\n{'GECTI' if not hata else 'KALDI'} {damga()}")
+    return hata
+
+
+def k_version(argv):
+    print(damga())
+
+
+def k_yardim(argv):
+    print(__doc__)
+    print("""  aiw models [filtre]        gecitteki modelleri listeler
+  aiw ask <model> <istem>    tek turluk cagri (--dosya YOL ile dosya ekler)
+  aiw check <yol>            checks/ kontrollerini kosar
+  aiw bench                  kontrollerin YP/YN oranini olcer
+  aiw maliyet                runs/ token toplami
+  aiw install | uninstall    ortak kurali ~/.claude/CLAUDE.md'ye baglar
+  aiw self-test              altyapinin kendi dogrulamasi
+  aiw version                etkin commit""")
+
+
+KOMUTLAR = {"models": k_models, "ask": k_ask, "check": k_check, "bench": k_bench,
+            "maliyet": k_maliyet, "install": k_install, "uninstall": k_uninstall,
+            "self-test": k_selftest, "version": k_version, "yardim": k_yardim}
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2 or sys.argv[1] not in KOMUTLAR:
+        k_yardim([]); sys.exit(0 if len(sys.argv) < 2 else 2)
+    sys.exit(KOMUTLAR[sys.argv[1]](sys.argv[2:]) or 0)

@@ -7,6 +7,7 @@ Sözleşme:
 import hashlib
 import json
 import os
+import re
 import ssl
 import time
 import urllib.error
@@ -17,22 +18,48 @@ from pathlib import Path
 BASE = "https://ai-gateway.uni-paderborn.de/v1"
 ROOT = Path(__file__).resolve().parent.parent
 RUNS = ROOT / "runs"
-FIYAT = ROOT / "fiyatlar.json"
+FIYAT = ROOT / "Modelle_und_Preise.md"   # tek kaynak: gecit isletmecisinin listesi
+
+
+_SATIR = re.compile(
+    r"`([^`]+)`"                      # model kimligi
+    r"[^|]*\|[^|]*\|"                 # Model sutununun kalani + Parameter
+    r"\s*\$?([\d.]+)\s*\|"           # Input Preis (1M)
+    r"\s*\$?([\d.]+)\s*\|"           # Output Preis (1M)
+    r"[^|]*\|[^|]*\|"                 # Max Input, Max Output
+    r"\s*([\dMk.]+)\s*\|"            # Max TPM
+    r"\s*([\dNA/]+)\s*\|"            # Max RPM
+)
 
 
 def fiyat_tablosu():
+    """Tek kaynak: gecit isletmecisinin fiyat listesi. Kopya tutulmaz, her cagride okunur."""
     if not FIYAT.exists():
         return {}
-    return json.loads(FIYAT.read_text()).get("fiyatlar", {})
+    tablo = {}
+    for satir in FIYAT.read_text(encoding="utf-8").splitlines():
+        if not satir.lstrip().startswith("|"):
+            continue
+        m = _SATIR.search(satir)
+        if not m:
+            continue
+        kimlik, gi, ci, tpm, rpm = m.groups()
+        tablo[kimlik.strip()] = {
+            "giris_1m_usd": float(gi),
+            "cikis_1m_usd": float(ci),
+            "tpm": tpm,
+            "rpm": rpm,
+        }
+    return tablo
 
 
 def usd_hesapla(model, giris, cikis):
-    """Fiyati bilinmeyen model icin None doner — sifir DEGIL. Kaynaksiz sayi yazilmaz."""
+    """Fiyati listede olmayan model icin None doner — sifir DEGIL. Kaynaksiz sayi yazilmaz."""
     f = fiyat_tablosu().get(model)
     if not f or giris is None or cikis is None:
         return None, None
     tutar = giris / 1_000_000 * f["giris_1m_usd"] + cikis / 1_000_000 * f["cikis_1m_usd"]
-    return round(tutar, 6), f.get("kaynak")
+    return round(tutar, 6), FIYAT.name
 
 
 class GatewayError(RuntimeError):

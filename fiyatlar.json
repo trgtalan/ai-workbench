@@ -1,5 +1,0 @@
-{
-  "_not": "Milyon token basina USD. Kaynaksiz satir yazilmaz (ilke 3). Gecit fiyat bilgisi vermiyor; bir modelin burada karsiligi yoksa maliyet 'bilinmiyor' raporlanir, sifir degil. Paderborn gecidinin kullaniciya fiel bir ucret yansitip yansitmadigi da DOGRULANMADI.",
-  "_bicim": {"ornek.model": {"giris_1m_usd": 0.0, "cikis_1m_usd": 0.0, "kaynak": "URL veya belge", "tarih": "YYYY-AA-GG"}},
-  "fiyatlar": {}
-}

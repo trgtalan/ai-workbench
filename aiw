@@ -78,7 +78,9 @@ def k_bench(argv):
 
 
 def k_maliyet(argv):
-    """runs/ altindaki cagrilarin token toplami — kanit olmadan tasarruf iddia edilmez."""
+    """runs/ altindaki cagrilarin token ve USD toplami. USD rapor aninda fiyat
+    listesinden yeniden hesaplanir, boylece liste guncellendiginde gecmis de duzelir."""
+    from aiw_lib import gateway
     toplam = {}
     for p in (KOK / "runs").rglob("*.json"):
         k = json.loads(p.read_text())
@@ -89,8 +91,9 @@ def k_maliyet(argv):
             t["hata"] += 1
         t["giris"] += k.get("token_giris") or 0
         t["cikis"] += k.get("token_cikis") or 0
-        if k.get("usd") is not None:
-            t["usd"] += k["usd"]; t["fiyatli"] += 1
+        usd, _ = gateway.usd_hesapla(k["model"], k.get("token_giris"), k.get("token_cikis"))
+        if usd is not None:
+            t["usd"] += usd; t["fiyatli"] += 1
     if not toplam:
         print("kayit yok."); return 0
     print(f"{'model':<38} {'cagri':>6} {'giris':>9} {'cikis':>9} {'hata':>5}  {'USD':>12}")
@@ -106,29 +109,26 @@ def k_maliyet(argv):
     genel = sum(t["usd"] for t in toplam.values())
     print(f"\ntoplam bilinen: {genel:.6f} USD")
     if bilinmeyen:
-        print(f"fiyati tanimsiz cagri: {bilinmeyen} — 'aiw fiyat' ile kaynagiyla birlikte gir")
+        print(f"fiyati listede olmayan cagri: {bilinmeyen} — kaynak: {gateway.FIYAT.name}")
     print(f"{damga()}")
 
 
 def k_fiyat(argv):
-    """aiw fiyat                      tabloyu listeler
-       aiw fiyat <model> <giris> <cikis> <kaynak>   milyon token basina USD ekler"""
+    """aiw fiyat [filtre] — gecit isletmecisinin fiyat listesini okur. Tablo elle
+    tutulmaz; kaynak Modelle_und_Preise.md, guncelleme o dosyayi degistirmekle olur."""
     from aiw_lib import gateway
-    d = json.loads(gateway.FIYAT.read_text())
-    if not argv:
-        f = d.get("fiyatlar", {})
-        if not f:
-            print("fiyat tablosu bos — hicbir model icin USD hesaplanmiyor.")
-        for m, v in sorted(f.items()):
-            print(f"{m:<38} giris {v['giris_1m_usd']:>8} | cikis {v['cikis_1m_usd']:>8} | {v['kaynak']} ({v['tarih']})")
-        return 0
-    if len(argv) < 4:
-        print("kullanim: aiw fiyat <model> <giris_1m_usd> <cikis_1m_usd> <kaynak>"); return 2
-    from datetime import date
-    d["fiyatlar"][argv[0]] = {"giris_1m_usd": float(argv[1]), "cikis_1m_usd": float(argv[2]),
-                              "kaynak": " ".join(argv[3:]), "tarih": date.today().isoformat()}
-    gateway.FIYAT.write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n")
-    print(f"eklendi: {argv[0]}")
+    t = gateway.fiyat_tablosu()
+    if not t:
+        print(f"fiyat listesi okunamadi: {gateway.FIYAT}"); return 1
+    filtre = argv[0] if argv else ""
+    print(f"{'model':<40} {'giris/1M':>9} {'cikis/1M':>9} {'TPM':>6} {'RPM':>5}")
+    for m, v in sorted(t.items(), key=lambda x: (-x[1]["giris_1m_usd"], x[0])):
+        if filtre not in m:
+            continue
+        bedel = "ucretsiz" if v["giris_1m_usd"] == 0 == v["cikis_1m_usd"] else ""
+        print(f"{m:<40} ${v['giris_1m_usd']:>8.2f} ${v['cikis_1m_usd']:>8.2f}"
+              f" {v['tpm']:>6} {v['rpm']:>5}  {bedel}")
+    print(f"\nkaynak: {gateway.FIYAT.name} {damga()}")
 
 
 def k_install(argv):
@@ -230,7 +230,7 @@ def k_yardim(argv):
   aiw check <yol>            checks/ kontrollerini kosar
   aiw bench                  kontrollerin YP/YN oranini olcer
   aiw maliyet                runs/ token ve USD toplami
-  aiw fiyat [model g c kaynak]  fiyat tablosu (bos ise USD hesaplanmaz)
+  aiw fiyat [filtre]         gecit fiyat listesi (kaynak: Modelle_und_Preise.md)
   aiw install | uninstall    ortak kurali ~/.claude/CLAUDE.md'ye baglar
   aiw self-test              altyapinin kendi dogrulamasi
   aiw version                etkin commit""")

@@ -52,8 +52,12 @@ olduğunda, o iş için açılır. Şüphedeyken açılmaz.
 - **Her çağrı kaydedilir.** Model, token giriş/çıkış, süre, sonuç — `runs/` altına.
   Tasarruf iddiası ancak `aiw maliyet` çıktısıyla yapılır.
 - **Harcama bildirilir.** Ücretli model kullanıldığında USD tutarı çağrı sonunda ve
-  `aiw maliyet` içinde raporlanır. Fiyatı `fiyatlar.json`'da kaynağıyla yazılı olmayan
-  model için **"bilinmiyor"** yazılır — sıfır değil, tahmin değil.
+  `aiw maliyet` içinde raporlanır. Kaynak: geçit işletmecisinin fiyat listesi
+  (`Modelle_und_Preise.md`). Listede olmayan model için **"bilinmiyor"** yazılır —
+  sıfır değil, tahmin değil.
+- **Ücretsiz olan önce denenir.** `gwdg.*` modelleri listede $0.00; işçi görevleri
+  varsayılan olarak oraya gider. `openai.*` ücretlidir ve ancak gerekçesi varken
+  kullanılır — gerekçe, kalite farkının işi değiştirmesidir.
 
 ## Komutlar
 

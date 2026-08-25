@@ -110,14 +110,20 @@ Susturma açık ve görünür: satır sonunda `kontrol:atla`. Sessiz hariç tutm
 
 Ücretli uç noktaya harcama ve hız sınırı konmaması bilinen bir hata.
 
-**Raporlama kuruldu:** her çağrının USD tutarı `runs/` kaydına ve `aiw maliyet`
-çıktısına giriyor. Fiyat kaynağı `fiyatlar.json`, `aiw fiyat` ile kaynak ve tarih
-zorunlu olarak girilir.
+**Raporlama kuruldu.** Her çağrının USD tutarı `aiw ask` çıktısında ve `aiw maliyet`
+özetinde görünüyor. Kaynak, geçit işletmecisinin kendi listesi: `Modelle_und_Preise.md`.
 
-**Tablo bilerek boş.** Geçit hiçbir fiyat uç noktası sunmuyor (`/pricing`, `/usage`,
-`/credits` — hepsi 404) ve Paderborn'un kullanıcıya fiilen ücret yansıtıp yansıtmadığı
-doğrulanmadı. Sağlayıcının liste fiyatını buraya yazmak, geçidin o fiyattan
-faturaladığını varsaymak olur — kaynaksız sayıdır. Fiyat, faturayı gördüğünde girilir.
+Elle tutulan ikinci bir tablo **yok** — 6. ilke gereği. İlk kurulumda bir `fiyatlar.json`
+yazılmıştı, liste gelince silindi: aynı sayıyı iki yerde tutmak, ikisinin ayrışmasını
+zaman meselesi yapar. Fiyat güncellendiğinde tek iş o dosyayı değiştirmektir.
+
+USD, kayıt anında değil **rapor anında** hesaplanır; böylece liste güncellendiğinde
+geçmiş çağrılar da doğru fiyatlanır.
+
+**Ölçülen ayrım:** `gwdg.*` modellerinin tamamı $0.00, `openai.*` ücretli
+($0.20–$30.00 giriş / 1M). İşçi katmanının maliyet gerekçesi bu satırda duruyor —
+ucuz modele iş devretmek değil, ücretsiz modele devretmek söz konusu.
+Hız sınırı da listede: gwdg 10 RPM / 500k TPM, openai 100 RPM / 2M TPM.
 
 **Sınır mekanizması (durdurma/eşik) hâlâ yok.** Raporlama harcamayı görünür kılar,
 engellemez. Eşik, gerçek bir ücret doğrulandığında yazılır.

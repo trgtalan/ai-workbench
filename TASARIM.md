@@ -89,6 +89,30 @@ sistem çalışmaya devam eder; iş Claude'da yapılır. Sessiz yedeğe geçiş 
 yolun kullanıldığı çıktıda görünür. Geçit tek yol olarak hiçbir yere yazılmadı; ikinci
 bir sağlayıcı geldiğinde `aiw_lib/gateway.py` yanına ikinci istemci girer.
 
+## İkinci kontrol — `sizinti`, ve kuralın bilerek delindiği yer
+
+`refs` gerçek bir rahatsızlıktan doğdu. `sizinti` doğmadı — önden yazıldı ve bu,
+"kullanımdan önce tasarım yapılmaz" ilkesinin bilinçli istisnasıdır.
+
+Gerekçe tek cümle: bu sınıfta hata geri alınamaz. Sızan anahtar rotasyon ister,
+push edilmiş `.env` git geçmişinde kalır, silmek yetmez. İstisnanın sınırı da dar —
+yalnız geri alınamaz olan taranır. CORS, RLS, bellekte veri, arayüzde yetki gibi
+maddeler bu projede karşılığı olmadığı için yazılmadı; hesaplayıcı geldiğinde
+yeniden değerlendirilir.
+
+Ölçüm ikiye bölündü: içerik taraması `benchmarks/sizinti/`, git'e bağlı maddeler
+(`.env` izlenmesi, `node_modules`, lock dosyası) `aiw self-test` içinde geçici bir
+depoda. İkincisi dosya tabanlı kümeye sığmıyordu.
+
+Susturma açık ve görünür: satır sonunda `kontrol:atla`. Sessiz hariç tutma yok.
+
+## Harcama sınırı — şimdi yok, tetiği yazılı
+
+Ücretli uç noktaya harcama ve hız sınırı konmaması bilinen bir hata. Şu an sağlayıcı
+üniversite geçidi; ölçülü bir ücret yok, `aiw maliyet` token toplamını gösteriyor.
+Sınır mekanizması **ölçülü/ücretli ikinci bir sağlayıcı eklendiğinde** yazılır —
+o gün gelene kadar korunacak bir bütçe yok.
+
 ## Bilinen takas
 
 `git pull` bütün projeleri aynı anda etkiler. Proje bazında sürüm sabitleme bilinçli

@@ -1,0 +1,6 @@
+{
+  "kume": "kume-v1",
+  "kapsam": "icerik taramasi (gomulu sir, istemci oneki, sabit localhost). Git'e bagli maddeler (.env izlenmesi, node_modules, lock) aiw self-test icinde olculur.",
+  "esik": {"yanlis_pozitif": 0, "yanlis_negatif": 0},
+  "beklenen_bulgular": ["olumlu.js:2", "olumlu.js:3", "olumlu.js:4"]
+}

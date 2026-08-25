@@ -56,17 +56,23 @@ def k_ask(argv):
 
 
 def k_check(argv):
-    from checks import refs
+    from checks import refs, sizinti
     hedef = Path(argv[0] if argv else ".")
-    b = refs.kos(hedef)
-    for d, n, ref in b:
-        print(f"{d}:{n}: kirik referans -> {ref}")
-    print(f"\n{len(b)} bulgu {damga()}")
-    return 1 if b else 0
+    toplam = 0
+    for ad, bulgular in (("refs", [(d, n, f"kirik referans -> {r}") for d, n, r in refs.kos(hedef)]),
+                         ("sizinti", sizinti.kos(hedef))):
+        for d, n, m in bulgular:
+            print(f"{d}:{n}: [{ad}] {m}")
+        toplam += len(bulgular)
+    print(f"\n{toplam} bulgu {damga()}")
+    return 1 if toplam else 0
 
 
 def k_bench(argv):
-    return subprocess.call([sys.executable, str(KOK / "benchmarks/refs/olc.py")])
+    hata = 0
+    for olcer in sorted((KOK / "benchmarks").glob("*/olc.py")):
+        hata |= subprocess.call([sys.executable, str(olcer)])
+    return hata
 
 
 def k_maliyet(argv):
@@ -138,7 +144,35 @@ def k_selftest(argv):
         if ISARET_BAS in HEDEF_KURAL.read_text():
             print("   KALDI: blok temiz silinmedi"); hata |= 1
     HEDEF_KURAL = gercek
-    print("\n3) gecit erisimi")
+    print("\n3) git'e bagli sizinti maddeleri (gecici depoda)")
+    from checks import sizinti
+    with tempfile.TemporaryDirectory() as t:
+        d = Path(t)
+        subprocess.run(["git", "-C", str(d), "init", "-q"], check=True)
+        (d / ".env").write_text("UPB_API_KEY=aB3dEfGh1jKlMn0pQrStUv\n")
+        (d / "package.json").write_text("{}\n")
+        (d / "node_modules").mkdir()
+        (d / "node_modules" / "x.js").write_text("//\n")
+        subprocess.run(["git", "-C", str(d), "add", "-A"], check=True)
+        mesajlar = {m for _, _, m in sizinti.kos(d)}
+        for beklenen in ("git bu .env dosyasini izliyor",
+                         "git node_modules icerigini izliyor",
+                         "lock dosyasi yok"):
+            if beklenen not in mesajlar:
+                print(f"   KALDI: yakalanmadi -> {beklenen}"); hata |= 1
+        # dogru kurulumda bulgu olmamali
+        (d / ".gitignore").write_text(".env\nnode_modules/\n")
+        (d / "package-lock.json").write_text("{}\n")
+        subprocess.run(["git", "-C", str(d), "rm", "-r", "-q", "--cached",
+                        ".env", "node_modules"], check=True)
+        subprocess.run(["git", "-C", str(d), "add", "-A"], check=True)
+        kalan = sizinti.kos(d)
+        if kalan:
+            print(f"   KALDI: duzeltilmis depoda hala bulgu var -> {kalan}"); hata |= 1
+    if not hata:
+        print("   3 madde yakalandi, duzeltilmis depo temiz")
+
+    print("\n4) gecit erisimi")
     try:
         from aiw_lib import gateway
         print(f"   {len(gateway.modeller())} model gorunuyor")

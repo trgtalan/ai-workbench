@@ -65,6 +65,24 @@ aiw self-test           altyapının kendi doğrulaması
 aiw version             etkin commit
 ```
 
+## Yayına alma
+
+Bu maddeler kontrolle değil, davranışla önlenir:
+
+- **İlk deploy sona bırakılmaz.** Boş iskelet daha ilk gün gerçek adrese çıkar; build
+  komutu, çıktı klasörü ve ortam değişkeni panelde bir kez orada doğrulanır. Bitmiş
+  projeyi ilk kez deploy etmek, birikmiş bütün hatayı aynı anda açar.
+- **Log okunmadan teşhis yazılmaz.** Deploy veya konsol hatasında önce çıktının kendisi
+  okunur; tahminle sebep önerilmez.
+- **Kütüphane bilgisi ezberden yazılmaz.** Sürüm, API ve yapılandırma kararları güncel
+  dokümandan doğrulanır. Model eğitim verisi bayat olabilir; kurulum komutu ve
+  yapılandırma alanları uydurulmaz.
+- **Çalışma zamanı sürümü depoda sabitlenir.** Node için `.nvmrc` veya `engines`,
+  Python için sürüm dosyası. Yerelde çalışıp sunucuda çökmenin en sık sebebi budur.
+
+Geri alınamaz olan sınıf — sızan anahtar, push edilmiş `.env` — davranışa bırakılmaz,
+`checks/sizinti.py` tarar.
+
 ## Kontroller
 
 Bir kontrol, tahminle değil, **tekrar eden gerçek bir rahatsızlıktan** doğar.

@@ -3,3 +3,17 @@ runs/
 __pycache__/
 *.pyc
 .env
+
+# sir dosyalari — kazayla eklenmesin
+.env
+.env.*
+!.env.example
+*recovery*
+*kurtarma*
+*secret*
+*credential*
+*.pem
+*.key
+*.p12
+id_rsa*
+id_ed25519*

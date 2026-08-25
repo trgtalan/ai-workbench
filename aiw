@@ -52,7 +52,9 @@ def k_ask(argv):
         istem += "\n\n---\n" + y.read_text(encoding="utf-8")
     metin, kayit = gateway.sor(model, istem)
     print(metin)
-    print(f"\n--- {damga()} {model} | token {kayit['token_giris']}/{kayit['token_cikis']} | {kayit['saniye']}sn")
+    bedel = f"{kayit['usd']:.6f} USD" if kayit.get("usd") is not None else "USD bilinmiyor (fiyat tanimsiz)"
+    print(f"\n--- {damga()} {model} | token {kayit['token_giris']}/{kayit['token_cikis']}"
+          f" | {kayit['saniye']}sn | {bedel}")
 
 
 def k_check(argv):
@@ -80,18 +82,53 @@ def k_maliyet(argv):
     toplam = {}
     for p in (KOK / "runs").rglob("*.json"):
         k = json.loads(p.read_text())
-        t = toplam.setdefault(k["model"], {"cagri": 0, "giris": 0, "cikis": 0, "hata": 0})
+        t = toplam.setdefault(k["model"], {"cagri": 0, "giris": 0, "cikis": 0, "hata": 0,
+                                           "usd": 0.0, "fiyatli": 0})
         t["cagri"] += 1
         if k.get("sonuc") == "hata":
             t["hata"] += 1
         t["giris"] += k.get("token_giris") or 0
         t["cikis"] += k.get("token_cikis") or 0
+        if k.get("usd") is not None:
+            t["usd"] += k["usd"]; t["fiyatli"] += 1
     if not toplam:
         print("kayit yok."); return 0
-    print(f"{'model':<38} {'cagri':>6} {'giris':>9} {'cikis':>9} {'hata':>5}")
+    print(f"{'model':<38} {'cagri':>6} {'giris':>9} {'cikis':>9} {'hata':>5}  {'USD':>12}")
+    bilinmeyen = 0
     for m, t in sorted(toplam.items()):
-        print(f"{m:<38} {t['cagri']:>6} {t['giris']:>9} {t['cikis']:>9} {t['hata']:>5}")
-    print(f"\n{damga()}")
+        if t["fiyatli"] == t["cagri"]:
+            usd = f"{t['usd']:.6f}"
+        elif t["fiyatli"] == 0:
+            usd = "bilinmiyor"; bilinmeyen += t["cagri"]
+        else:
+            usd = f"{t['usd']:.6f}+?"; bilinmeyen += t["cagri"] - t["fiyatli"]
+        print(f"{m:<38} {t['cagri']:>6} {t['giris']:>9} {t['cikis']:>9} {t['hata']:>5}  {usd:>12}")
+    genel = sum(t["usd"] for t in toplam.values())
+    print(f"\ntoplam bilinen: {genel:.6f} USD")
+    if bilinmeyen:
+        print(f"fiyati tanimsiz cagri: {bilinmeyen} — 'aiw fiyat' ile kaynagiyla birlikte gir")
+    print(f"{damga()}")
+
+
+def k_fiyat(argv):
+    """aiw fiyat                      tabloyu listeler
+       aiw fiyat <model> <giris> <cikis> <kaynak>   milyon token basina USD ekler"""
+    from aiw_lib import gateway
+    d = json.loads(gateway.FIYAT.read_text())
+    if not argv:
+        f = d.get("fiyatlar", {})
+        if not f:
+            print("fiyat tablosu bos — hicbir model icin USD hesaplanmiyor.")
+        for m, v in sorted(f.items()):
+            print(f"{m:<38} giris {v['giris_1m_usd']:>8} | cikis {v['cikis_1m_usd']:>8} | {v['kaynak']} ({v['tarih']})")
+        return 0
+    if len(argv) < 4:
+        print("kullanim: aiw fiyat <model> <giris_1m_usd> <cikis_1m_usd> <kaynak>"); return 2
+    from datetime import date
+    d["fiyatlar"][argv[0]] = {"giris_1m_usd": float(argv[1]), "cikis_1m_usd": float(argv[2]),
+                              "kaynak": " ".join(argv[3:]), "tarih": date.today().isoformat()}
+    gateway.FIYAT.write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n")
+    print(f"eklendi: {argv[0]}")
 
 
 def k_install(argv):
@@ -192,14 +229,15 @@ def k_yardim(argv):
   aiw ask <model> <istem>    tek turluk cagri (--dosya YOL ile dosya ekler)
   aiw check <yol>            checks/ kontrollerini kosar
   aiw bench                  kontrollerin YP/YN oranini olcer
-  aiw maliyet                runs/ token toplami
+  aiw maliyet                runs/ token ve USD toplami
+  aiw fiyat [model g c kaynak]  fiyat tablosu (bos ise USD hesaplanmaz)
   aiw install | uninstall    ortak kurali ~/.claude/CLAUDE.md'ye baglar
   aiw self-test              altyapinin kendi dogrulamasi
   aiw version                etkin commit""")
 
 
 KOMUTLAR = {"models": k_models, "ask": k_ask, "check": k_check, "bench": k_bench,
-            "maliyet": k_maliyet, "install": k_install, "uninstall": k_uninstall,
+            "maliyet": k_maliyet, "fiyat": k_fiyat, "install": k_install, "uninstall": k_uninstall,
             "self-test": k_selftest, "version": k_version, "yardim": k_yardim}
 
 if __name__ == "__main__":

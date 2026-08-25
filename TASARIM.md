@@ -108,10 +108,19 @@ Susturma açık ve görünür: satır sonunda `kontrol:atla`. Sessiz hariç tutm
 
 ## Harcama sınırı — şimdi yok, tetiği yazılı
 
-Ücretli uç noktaya harcama ve hız sınırı konmaması bilinen bir hata. Şu an sağlayıcı
-üniversite geçidi; ölçülü bir ücret yok, `aiw maliyet` token toplamını gösteriyor.
-Sınır mekanizması **ölçülü/ücretli ikinci bir sağlayıcı eklendiğinde** yazılır —
-o gün gelene kadar korunacak bir bütçe yok.
+Ücretli uç noktaya harcama ve hız sınırı konmaması bilinen bir hata.
+
+**Raporlama kuruldu:** her çağrının USD tutarı `runs/` kaydına ve `aiw maliyet`
+çıktısına giriyor. Fiyat kaynağı `fiyatlar.json`, `aiw fiyat` ile kaynak ve tarih
+zorunlu olarak girilir.
+
+**Tablo bilerek boş.** Geçit hiçbir fiyat uç noktası sunmuyor (`/pricing`, `/usage`,
+`/credits` — hepsi 404) ve Paderborn'un kullanıcıya fiilen ücret yansıtıp yansıtmadığı
+doğrulanmadı. Sağlayıcının liste fiyatını buraya yazmak, geçidin o fiyattan
+faturaladığını varsaymak olur — kaynaksız sayıdır. Fiyat, faturayı gördüğünde girilir.
+
+**Sınır mekanizması (durdurma/eşik) hâlâ yok.** Raporlama harcamayı görünür kılar,
+engellemez. Eşik, gerçek bir ücret doğrulandığında yazılır.
 
 ## Bilinen takas
 

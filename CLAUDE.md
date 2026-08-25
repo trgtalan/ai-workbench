@@ -51,6 +51,9 @@ olduğunda, o iş için açılır. Şüphedeyken açılmaz.
   Geçit tek yol değildir; katman kapalıyken sistem çalışmaya devam eder.
 - **Her çağrı kaydedilir.** Model, token giriş/çıkış, süre, sonuç — `runs/` altına.
   Tasarruf iddiası ancak `aiw maliyet` çıktısıyla yapılır.
+- **Harcama bildirilir.** Ücretli model kullanıldığında USD tutarı çağrı sonunda ve
+  `aiw maliyet` içinde raporlanır. Fiyatı `fiyatlar.json`'da kaynağıyla yazılı olmayan
+  model için **"bilinmiyor"** yazılır — sıfır değil, tahmin değil.
 
 ## Komutlar
 

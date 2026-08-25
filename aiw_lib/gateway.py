@@ -17,6 +17,22 @@ from pathlib import Path
 BASE = "https://ai-gateway.uni-paderborn.de/v1"
 ROOT = Path(__file__).resolve().parent.parent
 RUNS = ROOT / "runs"
+FIYAT = ROOT / "fiyatlar.json"
+
+
+def fiyat_tablosu():
+    if not FIYAT.exists():
+        return {}
+    return json.loads(FIYAT.read_text()).get("fiyatlar", {})
+
+
+def usd_hesapla(model, giris, cikis):
+    """Fiyati bilinmeyen model icin None doner — sifir DEGIL. Kaynaksiz sayi yazilmaz."""
+    f = fiyat_tablosu().get(model)
+    if not f or giris is None or cikis is None:
+        return None, None
+    tutar = giris / 1_000_000 * f["giris_1m_usd"] + cikis / 1_000_000 * f["cikis_1m_usd"]
+    return round(tutar, 6), f.get("kaynak")
 
 
 class GatewayError(RuntimeError):
@@ -102,11 +118,15 @@ def sor(model, istem, sistem=None, azami_token=4000):
         _kaydet(kayit)
         raise
     kullanim = c.get("usage") or {}
+    gi, ci = kullanim.get("prompt_tokens"), kullanim.get("completion_tokens")
+    usd, kaynak = usd_hesapla(model, gi, ci)
     kayit.update(
         sonuc="tamam",
         saniye=round(time.time() - t0, 2),
-        token_giris=kullanim.get("prompt_tokens"),
-        token_cikis=kullanim.get("completion_tokens"),
+        token_giris=gi,
+        token_cikis=ci,
+        usd=usd,
+        fiyat_kaynak=kaynak,
     )
     _kaydet(kayit)
     return c["choices"][0]["message"]["content"], kayit

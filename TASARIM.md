@@ -128,6 +128,18 @@ Hız sınırı da listede: gwdg 10 RPM / 500k TPM, openai 100 RPM / 2M TPM.
 **Sınır mekanizması (durdurma/eşik) hâlâ yok.** Raporlama harcamayı görünür kılar,
 engellemez. Eşik, gerçek bir ücret doğrulandığında yazılır.
 
+## Anahtar köprüsü — şimdi yok, tetiği yazılı
+
+`aiw` anahtarını macOS anahtar zincirinden okuyor. Ama Next.js zinciri bilmiyor,
+yalnız `process.env`'e bakıyor — arada bir köprü gerekiyor.
+
+**Köprü yazılmadı.** self-enerji-site'de tek bir sır yok; kullanılmayan altyapı
+yazmak bu belgenin kaçındığı şeyin ta kendisi.
+
+**Tetik:** site ilk sırrına ihtiyaç duyduğunda (büyük ihtimalle iletişim formu
+e-posta göndermeye başladığında). O gün köprü yazılır ve aynı anahtar Vercel
+paneline girilir — yerelde zincir, yayında panel. Düz metin dosya hiçbir yerde.
+
 ## Bilinen takas
 
 `git pull` bütün projeleri aynı anda etkiler. Proje bazında sürüm sabitleme bilinçli

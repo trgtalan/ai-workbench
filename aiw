@@ -42,15 +42,16 @@ def k_models(argv):
 
 
 def k_ask(argv):
-    """aiw ask <model> <istem> [--dosya YOL]"""
+    """aiw ask <model> <istem> [--dosya YOL] [--token N]"""
     from aiw_lib import gateway
     if len(argv) < 2:
-        print("kullanim: aiw ask <model> <istem> [--dosya YOL]"); return 2
+        print("kullanim: aiw ask <model> <istem> [--dosya YOL] [--token N]"); return 2
     model, istem = argv[0], argv[1]
     if "--dosya" in argv:
         y = Path(argv[argv.index("--dosya") + 1])
         istem += "\n\n---\n" + y.read_text(encoding="utf-8")
-    metin, kayit = gateway.sor(model, istem)
+    azami = int(argv[argv.index("--token") + 1]) if "--token" in argv else 4000
+    metin, kayit = gateway.sor(model, istem, azami_token=azami)
     print(metin)
     bedel = f"{kayit['usd']:.6f} USD" if kayit.get("usd") is not None else "USD bilinmiyor (fiyat tanimsiz)"
     print(f"\n--- {damga()} {model} | token {kayit['token_giris']}/{kayit['token_cikis']}"
@@ -226,7 +227,7 @@ def k_version(argv):
 def k_yardim(argv):
     print(__doc__)
     print("""  aiw models [filtre]        gecitteki modelleri listeler
-  aiw ask <model> <istem>    tek turluk cagri (--dosya YOL ile dosya ekler)
+  aiw ask <model> <istem>    tek turluk cagri (--dosya YOL, --token N)
   aiw check <yol>            checks/ kontrollerini kosar
   aiw bench                  kontrollerin YP/YN oranini olcer
   aiw maliyet                runs/ token ve USD toplami

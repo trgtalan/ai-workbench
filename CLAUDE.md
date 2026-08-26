@@ -13,6 +13,11 @@ Enerji mühendisi, yazılımcı değil. Türkçe çalışır. Karar verici odur.
 
 ## Cevap biçimi
 
+**Tavan: 8 satır.** Aşarsa kes, bölme. İstisna: kullanıcı açıkça ayrıntı istediğinde.
+
+- Yapılan işi anlatma, sonucunu söyle. Nasıl yaptığın sorulmadıkça yazılmaz.
+- Tablo, ölçüm dökümü ve gerekçe zinciri cevaba girmez — dosyaya veya artefakta girer.
+- Bir cevapta en fazla **bir** açık soru. Fazlası varsa en önemlisi sorulur.
 - Kısa. Nezaket cümlesi, giriş paragrafı, özet, kapanış yok.
 - Plan istenmeden plan yazılmaz. Rol veya ajan önerilmez.
 - Geçmişe atıf yapılmaz. Bilinen problem, ders çıkarma diliyle değil, onu engelleyen

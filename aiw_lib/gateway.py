@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import ssl
 import time
 import urllib.error
@@ -80,18 +81,38 @@ def _ssl_baglami():
 _CTX = _ssl_baglami()
 
 
+KEYCHAIN_SERVIS = "aiw-upb"
+
+
+def _keychain(servis=KEYCHAIN_SERVIS):
+    """macOS anahtar zincirinden okur. Bulunamazsa None; anahtar hicbir yere basilmaz."""
+    try:
+        c = subprocess.run(
+            ["security", "find-generic-password", "-s", servis, "-w"],
+            capture_output=True, text=True, timeout=15,
+        )
+        return c.stdout.strip() or None if c.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
 def anahtar():
-    """Önce ortam değişkeni, sonra ~/.config/aiw/env. Anahtar hiçbir yere basılmaz."""
+    """Sira: ortam degiskeni -> macOS anahtar zinciri -> ~/.config/aiw/env (eski).
+    Anahtar hicbir ciktiya, kayda veya commit'e basilmaz."""
     k = os.environ.get("UPB_API_KEY")
     if k:
         return k.strip()
+    k = _keychain()
+    if k:
+        return k
     p = Path.home() / ".config" / "aiw" / "env"
     if p.exists():
         for satir in p.read_text().splitlines():
             if satir.startswith("UPB_API_KEY="):
                 return satir.split("=", 1)[1].strip()
     raise GatewayError(
-        "UPB_API_KEY bulunamadi. Ortam degiskeni tanimla ya da ~/.config/aiw/env icine yaz."
+        "UPB_API_KEY bulunamadi. Anahtar zincirine yaz:\n"
+        "  security add-generic-password -s aiw-upb -a $USER -w -U"
     )
 
 

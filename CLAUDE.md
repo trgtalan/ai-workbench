@@ -103,8 +103,13 @@ bıraktığı. Ölçülmemiş kontrol kullanılmaz — eşik `benchmarks/` altı
 
 ## Anahtarlar
 
-`UPB_API_KEY` önce ortam değişkeninden, yoksa `~/.config/aiw/env` (600) dosyasından
-okunur. Anahtar hiçbir çıktıya, kayda veya commit'e basılmaz.
+Sıra: ortam değişkeni → **macOS anahtar zinciri** (`aiw-upb`) → `~/.config/aiw/env`
+(eski, düz metin). Anahtar hiçbir çıktıya, kayda veya commit'e basılmaz.
+
+Yeni anahtar yazmak — değer terminale girilir, hiçbir dosyaya ve sohbete düşmez:
+```
+security add-generic-password -s aiw-upb -a $USER -w -U
+```
 
 ## Başlangıç esnekliği — süreli madde
 
